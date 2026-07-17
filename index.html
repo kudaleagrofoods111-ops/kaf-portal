@@ -194,6 +194,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .ss-list li{padding:9px 14px;font-size:13px;cursor:pointer;transition:background .1s}
 .ss-list li:hover{background:var(--green-bg);color:var(--green)}
 .ss-list li.no-match{color:var(--text3);cursor:default;font-style:italic}
+.ss-list li.ss-add-custom{color:var(--blue);font-size:12px;border-top:1px solid var(--border);background:var(--surface2);font-style:normal}
+.ss-list li.ss-add-custom:hover{background:#e8f0fe}
 
 /* PREVIEW */
 .preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
@@ -448,7 +450,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
           <div class="fr2">
             <div class="field"><label>Purchase date</label><input id="p-date" type="date"/></div>
             <div class="field"><label>Purchaser name</label>
-              <input id="p-emp" type="text" placeholder="Enter purchaser name"/>
+              <div class="ss-wrap" id="sw-p-emp">
+                <input class="ss-input" id="sd-p-emp" placeholder="Search or type purchaser..." readonly onclick="toggleSSPur('p-emp')" value=""/>
+                <input type="hidden" id="p-emp" value=""/>
+                <div class="ss-dd" id="sdd-p-emp">
+                  <div class="ss-search"><input type="text" id="si-p-emp" placeholder="Type to search..." oninput="filterSSPur('p-emp')"/></div>
+                  <ul class="ss-list" id="sl-p-emp"></ul>
+                </div>
+              </div>
             </div>
           </div>
           <div class="fr2">
@@ -469,7 +478,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
           <div class="fr2">
             <div class="field"><label>Purchase date</label><input id="p2-date" type="date"/></div>
             <div class="field"><label>Purchaser name</label>
-              <input id="p2-emp" type="text" placeholder="Enter purchaser name"/>
+              <div class="ss-wrap" id="sw-p2-emp">
+                <input class="ss-input" id="sd-p2-emp" placeholder="Search or type purchaser..." readonly onclick="toggleSSPur('p2-emp')" value=""/>
+                <input type="hidden" id="p2-emp" value=""/>
+                <div class="ss-dd" id="sdd-p2-emp">
+                  <div class="ss-search"><input type="text" id="si-p2-emp" placeholder="Type to search..." oninput="filterSSPur('p2-emp')"/></div>
+                  <ul class="ss-list" id="sl-p2-emp"></ul>
+                </div>
+              </div>
             </div>
           </div>
           <div class="fr2">
@@ -673,7 +689,59 @@ function setPartyInfo(name,fields){
   partyInfoDoc.set(PARTY_INFO).catch(e=>console.error('partyInfo write:',e));
 }
 
-const ITEMS=["05kg G Bheli O(P)","05kg G Bheli Y(P)","05kg R Bheli O/p","09kg Bheli R(P)","09kg bheli RO (P)","1kg/18p Box LO","1kg/18p Box O","1kg/18p Box R","1kg/18p Box Y","1kg/18p LP Box O","1kg/18p R Box O","1kg/18p R Box YO","1kg/20p Box RO","10kg Bheli M(P)","10kg Bheli R(K)","10kg Bheli R(P)","10kg Bheli Y(P)","10kg G Bheli O(K)","10kg G Bheli O/P","10kg G Bheli R(K)","10kg G Bheli R/K","10kg G Bheli RO(P)","10kg G Bheli Y(P)","10kg L Bheli R(K)","10kg L Bheli R(P)","10kg R Bheli LO(P)","10kg R Bheli NL(P)","10kg R Bheli O/p","10kg R Bheli R(K)","10kg R Bheli R(P)","10kg R Bheli Y(P)","250gm R Box LO","250gm/80p Box O","250gm/80p Box Y","500gm LP Box O","500gm R Box O","500gm R Box Y","500gm/40p Box O","500gm/40p Box R","500gm/40p Box Y","9.5kg Bheli O(P)","9.5kg Bheli R(K)","9.5kg Bheli R/P","9.5kg Bheli RO(K)","9.5kg Bheli RO(P)","9.5kg Bheli Y/P","9kg bheli RO(P)","JP 30kg Bag O","JP 50kg Bag O","Katora 27kg Box O","Laddu 20kg Box O","Laddu 20kg Box Y","Papdi 40kg Bag R","Papdi 50kg Bag M","Papdi 50kg Bag R","Papdi 50kg Bag RO","Pedhi 10kg Box M","Pedhi 10kg Box O","Pedhi 10kg Box Y","Pedhi 20kg Box Y(P)","Sq 1kg/18p Box N","Sq 500gm/36p Box N","Sugar S30 50kg Bag","Tin 27kg R"].sort();
+const ITEMS_BASE=[
+  "05kg G Bheli O(P)","05kg G Bheli Y(P)","05kg R Bheli O/p",
+  "09kg Bheli R(P)","09kg Bheli RO(P)","09kg bheli RO (P)","09kg bheli R(P)",
+  "9kg bheli RO(P)","9kg bheli R(P)",
+  "9.5kg Bheli M(P)","9.5kg Bheli O(P)","9.5kg Bheli R(K)","9.5kg Bheli R/P",
+  "9.5kg Bheli RO(K)","9.5kg Bheli RO(P)","9.5kg Bheli Y/P",
+  "10kg Bheli M(P)","10kg Bheli R(K)","10kg Bheli R(P)","10kg Bheli RO(P)",
+  "10kg Bheli Y(P)",
+  "10kg G Bheli O(K)","10kg G Bheli O/P","10kg G Bheli R(K)","10kg G Bheli R/K",
+  "10kg G Bheli RO(P)","10kg G Bheli Y(P)",
+  "10kg L Bheli R(K)","10kg L Bheli R(P)",
+  "10kg R Bheli LO(P)","10kg R Bheli NL(P)","10kg R Bheli O/p",
+  "10kg R Bheli R(K)","10kg R Bheli R(P)","10kg R Bheli Y(P)",
+  "1kg/18p Box LO","1kg/18p Box NL","1kg/18p Box O","1kg/18p Box R","1kg/18p Box Y",
+  "1kg/18p LP Box O","1kg/18p R Box O","1kg/18p R Box YO","1kg/20p Box RO",
+  "250gm R Box LO","250gm/80p Box O","250gm/80p Box Y",
+  "500gm LP Box O","500gm R Box O","500gm R Box Y",
+  "500gm/40p Box O","500gm/40p Box R","500gm/40p Box Y",
+  "JP 30kg Bag O","JP 50kg Bag O",
+  "Katora 27kg Box O",
+  "Laddu 20kg Box O","Laddu 20kg Box Y",
+  "Papdi 40kg Bag R","Papdi 50kg Bag M","Papdi 50kg Bag R","Papdi 50kg Bag RO",
+  "Pedhi 10kg Box M","Pedhi 10kg Box O","Pedhi 10kg Box RO","Pedhi 10kg Box Y",
+  "Pedhi 20kg Box Y(P)",
+  "Sq 1kg/18p Box N","Sq 500gm/36p Box N",
+  "Sugar S30 50kg Bag",
+  "Tin 27kg R"
+];
+// Load any custom items added by users from localStorage
+let CUSTOM_ITEMS=JSON.parse(localStorage.getItem('kaf_custom_items')||'[]');
+function saveCustomItems(){localStorage.setItem('kaf_custom_items',JSON.stringify(CUSTOM_ITEMS));}
+function getAllItems(){return [...new Set([...ITEMS_BASE,...CUSTOM_ITEMS])].sort();}
+const ITEMS=getAllItems(); // kept for backward compat — rebuilt dynamically below
+
+// ── Purchasers list ──
+const PURCHASERS_BASE=[
+  "Swapnil Bhujbal","Vijay Dorge","Hemant Kale","Vishal Nalge","Bandu Kudale",
+  "Basavraj P Karehona","Morya Agro Foods","Junnar Sugars Ltd",
+  "Jay Hanuman Gul Udyog (Hatvalan/MH)","Anand Traders (Yavat/MH)","Certitude",
+  "Bhairavnath T Company","Shankar Kudale",
+  "Sai Prasad Naturl Sugar PVT LTD (Beed/MH)",
+  "Govindraj Traders (Kandhar/MH)","NVP Sugar PVT LTD (Jagaji/MH)",
+  "Lokmangal Agro Industries LTD (Solapur/MH)",
+  "Haribhau Kadam","Shri Chhatrapati SSK Ltd (Bhavaninagar/MH)",
+  "Sunil Chaudhari","Shreeja Gul Udyog (Kedgaon/MH)","Rajveer Gul Udyog",
+  "Nawle Agro Foods (Yavat/MH)","Jai Malhar Bardana Trading (Yavat/MH)",
+  "Sandip Tate (Latur/MH)","Maharaja Industries Warehouse (Vijayapura/KA)",
+  "Shri Gurunatharoodha J P U (Rajapur/KA)",
+  "Mahalaxmi Provision Store (Kanjari/GJ)"
+];
+let CUSTOM_PURCHASERS=JSON.parse(localStorage.getItem('kaf_custom_purchasers')||'[]');
+function saveCustomPurchasers(){localStorage.setItem('kaf_custom_purchasers',JSON.stringify(CUSTOM_PURCHASERS));}
+function getAllPurchasers(){return [...new Set([...PURCHASERS_BASE,...CUSTOM_PURCHASERS])].sort();}
 
 // STAGES: key, label, badge class, who acts on it, visible label for pipeline
 const STAGES=[
@@ -812,10 +880,39 @@ const SS={
   party:{data:()=>PARTIES,di:'sd-party',vi:'sv-party',si:'si-party',li:'sl-party',dd:'sdd-party'},
   broker:{data:()=>BROKERS,di:'sd-broker',vi:'sv-broker',si:'si-broker',li:'sl-broker',dd:'sdd-broker'},
 };
-function initSS(k){renderSSL(k,SS[k].data())}
+function initSS(k){
+  // If this is an item selector key, mark it as supporting custom items
+  if(k.startsWith('p_')||k.startsWith('s_')||k.startsWith('p2_')){
+    SS[k].customKey='items';
+    SS[k].data=()=>getAllItems();
+  }
+  renderSSL(k,SS[k].data());
+}
 function renderSSL(k,items){
   const ul=document.getElementById(SS[k].li);
-  ul.innerHTML=items.length?items.map(v=>`<li onclick="pickSS('${k}','${v.replace(/'/g,"&#39;")}')">${v}</li>`).join(''):'<li class="no-match">No matches</li>';
+  const q=document.getElementById(SS[k].si)?document.getElementById(SS[k].si).value.trim():'';
+  // Check if this key supports custom items
+  const customKey=SS[k].customKey||null;
+  let html=items.length
+    ?items.map(v=>`<li onclick="pickSS('${k}','${v.replace(/'/g,"&#39;")}')">${v}</li>`).join('')
+    :'<li class="no-match">No matches</li>';
+  // Add "＋ Add as custom item" at the bottom when typing something new
+  if(customKey&&q&&!items.find(v=>v.toLowerCase()===q.toLowerCase())){
+    html+=`<li class="ss-add-custom" onclick="addCustomSS('${k}','${q.replace(/'/g,"&#39;")}')">＋ Add "<strong>${q}</strong>" as new item</li>`;
+  }
+  ul.innerHTML=html;
+}
+function addCustomSS(k,val){
+  const customKey=SS[k].customKey;
+  if(!val)return;
+  if(customKey==='items'){
+    if(!CUSTOM_ITEMS.includes(val)){CUSTOM_ITEMS.push(val);saveCustomItems();}
+    SS[k].data=()=>getAllItems();
+  } else if(customKey==='purchasers'){
+    if(!CUSTOM_PURCHASERS.includes(val)){CUSTOM_PURCHASERS.push(val);saveCustomPurchasers();}
+    SS[k].data=()=>getAllPurchasers();
+  }
+  pickSS(k,val);
 }
 function filterSS(k){const q=document.getElementById(SS[k].si).value.toLowerCase();renderSSL(k,SS[k].data().filter(v=>v.toLowerCase().includes(q)))}
 function toggleSS(k){
@@ -828,7 +925,51 @@ function pickSS(k,v){
   document.getElementById(SS[k].vi).value=v;
   document.getElementById(SS[k].dd).classList.remove('open');
 }
-function closeAllSS(){Object.values(SS).forEach(c=>{const d=document.getElementById(c.dd);if(d)d.classList.remove('open')})}
+function closeAllSS(){
+  Object.values(SS).forEach(c=>{const d=document.getElementById(c.dd);if(d)d.classList.remove('open')});
+  ['sdd-p-emp','sdd-p2-emp'].forEach(id=>{const d=document.getElementById(id);if(d)d.classList.remove('open')});
+}
+// ── Purchaser searchable dropdown helpers ──
+function renderPurList(id,items){
+  const ul=document.getElementById('sl-'+id);if(!ul)return;
+  const q=document.getElementById('si-'+id)?document.getElementById('si-'+id).value.trim():'';
+  let html=items.length
+    ?items.map(v=>`<li onclick="pickPur('${id}','${v.replace(/'/g,"&#39;")}')">${v}</li>`).join('')
+    :'<li class="no-match">No matches</li>';
+  if(q&&!items.find(v=>v.toLowerCase()===q.toLowerCase())){
+    html+=`<li class="ss-add-custom" onclick="addCustomPur('${id}','${q.replace(/'/g,"&#39;")}')">＋ Add "<strong>${q}</strong>" as new purchaser</li>`;
+  }
+  ul.innerHTML=html;
+}
+function toggleSSPur(id){
+  const dd=document.getElementById('sdd-'+id);if(!dd)return;
+  const isOpen=dd.classList.contains('open');
+  closeAllSS();
+  if(!isOpen){dd.classList.add('open');renderPurList(id,getAllPurchasers());const si=document.getElementById('si-'+id);if(si){si.value='';si.focus();}}
+}
+function filterSSPur(id){
+  const q=document.getElementById('si-'+id).value.toLowerCase();
+  renderPurList(id,getAllPurchasers().filter(v=>v.toLowerCase().includes(q)));
+}
+function pickPur(id,v){
+  document.getElementById('sd-'+id).value=v;
+  document.getElementById(id).value=v;
+  document.getElementById('sdd-'+id).classList.remove('open');
+}
+function addCustomPur(id,val){
+  if(!val)return;
+  if(!CUSTOM_PURCHASERS.includes(val)){CUSTOM_PURCHASERS.push(val);saveCustomPurchasers();}
+  pickPur(id,val);
+}
+// Init purchaser dropdowns when wizard opens
+function initPurDropdowns(){
+  ['p-emp','p2-emp'].forEach(id=>{
+    const sd=document.getElementById('sd-'+id);
+    if(sd)sd.value='';
+    const hid=document.getElementById(id);
+    if(hid)hid.value='';
+  });
+}
 document.addEventListener('click',e=>{if(!e.target.closest('.ss-wrap'))closeAllSS()});
 
 
@@ -906,6 +1047,7 @@ function addPurchaser2(){
   document.getElementById('pur-block-2').style.display='';
   document.getElementById('btn-add-purchaser2').style.display='none';
   if(!purLines2.length) addPurLine2();
+  initPurDropdowns();
 }
 function removePurchaser2(){
   document.getElementById('pur-block-2').style.display='none';
@@ -913,6 +1055,8 @@ function removePurchaser2(){
   purLines2=[];
   Object.keys(SS).forEach(k=>{if(k.startsWith('p2_'))delete SS[k];});
   const c=document.getElementById('pur-lines-2-container');if(c)c.innerHTML='';
+  const sd=document.getElementById('sd-p2-emp');if(sd)sd.value='';
+  const hd=document.getElementById('p2-emp');if(hd)hd.value='';
 }
 
 // ── Purchaser 2 line functions ──
